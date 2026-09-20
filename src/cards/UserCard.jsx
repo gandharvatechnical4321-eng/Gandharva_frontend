@@ -398,7 +398,9 @@ const filteredContactsByType = currentContacts.filter((contact) => {
     } catch (error) {
       toast.error(
         "Error sending message: " +
-          (error.response?.data?.error || error.message)
+          (error.response?.data?.details ||
+            error.response?.data?.error ||
+            error.message)
       );
       console.error("Error sending message:", error.response?.data || error.message);
     } finally {
