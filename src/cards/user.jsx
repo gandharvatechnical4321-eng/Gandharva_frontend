@@ -39,7 +39,7 @@ const UserCard = ({})=>{
   const [showAddPopup, setShowAddPopup] = useState(false);
   const [addName, setAddName] = useState("");
   const [addContactNumber, setAddContactNumber] = useState("+91");
-  const [addTemplate, setAddTemplate] = useState("/plsreply");
+  const [addTemplate, setAddTemplate] = useState("/hello_world");
   const [sending, setSending] = useState(false);
   const [unread,setUnread]=  useState(false)
   const [showAllComments,setShowAllComents]=useState(false)

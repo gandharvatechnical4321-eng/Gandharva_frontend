@@ -216,7 +216,11 @@ const UserCard = ({ onContactSelect }) => {
   const [showAddPopup, setShowAddPopup] = useState(false);
   const [addName, setAddName] = useState("");
   const [addContactNumber, setAddContactNumber] = useState("+91");
-  const [addTemplate, setAddTemplate] = useState("/plsreply");
+  // This name must match an approved template in Meta WhatsApp Manager.
+  const [addTemplate, setAddTemplate] = useState("/hello_world");
+  const [addTemplateLanguage, setAddTemplateLanguage] = useState("en");
+  const [approvedTemplates, setApprovedTemplates] = useState([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [unread, setUnread] = useState(false);
   const [showAllComments, setShowAllComents] = useState(false);
@@ -237,6 +241,35 @@ const UserCard = ({ onContactSelect }) => {
   const contacts = useSelector((state) => state.contacts.contacts);
   const selectedContact = useSelector((state) => state.contacts.selectedContact);
   const totalContactPage = useSelector((state) => state.contacts.totalContactPage);
+
+  useEffect(() => {
+    if (!showAddPopup) return;
+
+    const loadApprovedTemplates = async () => {
+      setTemplatesLoading(true);
+      try {
+        const response = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/api/getPostDataOnMongo/whatsapp-templates`,
+          { headers: { Authorization: `Bearer ${Cookies.get("token")}` } }
+        );
+        const templates = response.data?.templates || [];
+        setApprovedTemplates(templates);
+        if (templates.length > 0) {
+          setAddTemplate(`/${templates[0].name}`);
+          setAddTemplateLanguage(templates[0].language || "en_US");
+        }
+      } catch (error) {
+        console.error(
+          "Could not load approved WhatsApp templates:",
+          error.response?.data || error.message
+        );
+      } finally {
+        setTemplatesLoading(false);
+      }
+    };
+
+    loadApprovedTemplates();
+  }, [showAddPopup]);
 
   const unreadTotal = contacts?.reduce(
     (total, item) => total + Number(item?.unread_count || 0),
@@ -367,6 +400,7 @@ const filteredContactsByType = currentContacts.filter((contact) => {
           },
           direction: "sent",
           components: [],
+          template_language: addTemplateLanguage,
           name: addName,
         },
         {
@@ -393,7 +427,8 @@ const filteredContactsByType = currentContacts.filter((contact) => {
         setShowAddPopup(false);
         setAddName("");
         setAddContactNumber("+91");
-        setAddTemplate("/plsreply");
+        setAddTemplate("/hello_world");
+        setAddTemplateLanguage("en");
       }
     } catch (error) {
       toast.error(
@@ -948,13 +983,41 @@ const maskString = (value) => {
                 <label className="mb-1.5 block text-xs font-semibold text-gray-600">
                   Initial Message
                 </label>
-                <textarea
+                {/* <textarea
                   value={addTemplate}
                   onChange={(e) => setAddTemplate(e.target.value)}
                   className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-3 text-sm outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
                   placeholder="Type your message..."
                   rows={3}
-                />
+                /> */}
+                <div>
+  <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+    WhatsApp Template
+  </label>
+
+  <input
+    type="text"
+    value={addTemplate}
+    onChange={(e) => setAddTemplate(e.target.value)}
+    className="h-11 w-full rounded-xl border border-gray-200 bg-gray-100 px-3.5 text-sm text-gray-700 outline-none"
+    placeholder="/hello_world"
+    list="approved-whatsapp-templates"
+  />
+
+  <datalist id="approved-whatsapp-templates">
+    {approvedTemplates.map((template) => (
+      <option key={`${template.name}-${template.language}`} value={`/${template.name}`}>
+        {template.language}
+      </option>
+    ))}
+  </datalist>
+
+  <p className="mt-1.5 text-xs text-gray-500">
+    {templatesLoading
+      ? "Loading approved templates..."
+      : "Enter/select an approved Meta template. The language must match the backend setting."}
+  </p>
+</div>
               </div>
             </div>
 

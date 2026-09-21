@@ -61,7 +61,7 @@ const quickReplies = [
   },
     {
         title:"temp",
-        message:"/plsreply",
+        message:"/hello_world",
         des:"this is template msg which will go to client/4"
     },
      
